@@ -1,0 +1,29 @@
+{
+  "name": "redesocialv2",
+  "version": "1.0.0",
+  "description": "rede social v2",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luiz-david05/RedeSocialV2.git"
+  },
+  "author": "luiz-david05",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/luiz-david05/RedeSocialV2/issues"
+  },
+  "homepage": "https://github.com/luiz-david05/RedeSocialV2#readme",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "fs": "^0.0.1-security",
+    "readline-sync": "^1.4.10"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.3",
+    "@types/readline-sync": "^1.4.8"
+  }
+}
