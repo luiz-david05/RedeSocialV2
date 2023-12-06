@@ -9,6 +9,7 @@ import { RedeSocial } from "./RedeSocial.js";
 import { AplicacaoError } from "./erros/AplicacaoError.js";
 import { ArquivoError } from "./erros/ArquivoError.js";
 import fs from "fs";
+import chalk from "chalk";
 class App {
     _redeSocial = new RedeSocial(new repositorioPerfisArray(), new repositorioPostagensArray());
     static main() {
@@ -141,38 +142,44 @@ class App {
             postagem = new PostagemAvancada(id, texto, 0, 0, this._redeSocial.formatarData(new Date()), autor, [], 300);
             while (true) {
                 const nomeHashtag = utils.input("Digite o nome da hashtag (0 para sair): ");
+                if (nomeHashtag === "0") {
+                    break;
+                }
                 if (nomeHashtag.includes("#")) {
                     this._redeSocial.inserirHashtag(postagem, nomeHashtag);
                 }
                 else {
                     console.log("\nHashtag inválida: a hashtag deve começar com '#'.");
                 }
-                if (nomeHashtag === "0") {
-                    break;
-                }
             }
         }
         this._redeSocial.incluirPostagem(postagem);
         console.log(`\nPostagem criada com sucesso!`);
     }
-    exibirFeed() {
-        console.log("\nFeed de postagens:");
-        const postagens = this._redeSocial.exibirFeedPostagens();
+    exibirPostagens(postagens) {
         for (let i = 0; i < postagens.length; i++) {
             const postagem = postagens[i];
             console.log(`\nPostagem [${i + 1}]`);
             console.log(`${this._redeSocial.toStringPostagem(postagem)}`);
-            const opcao = utils.getNumber("\nDigite 1 para curtir, 2 para descurtir ou 0 para sair: ");
-            if (opcao === 1) {
-                this._redeSocial.curtirPostagem(postagem.id);
-            }
-            else if (opcao === 2) {
-                this._redeSocial.descurtirPostagem(postagem.id);
-            }
-            else if (opcao === 0) {
-                break;
-            }
+            let opcao;
+            do {
+                opcao = utils.getNumber("\nDigite 1 para curtir, 2 para descurtir: ");
+                if (opcao === 1) {
+                    this._redeSocial.curtirPostagem(postagem.id);
+                }
+                else if (opcao === 2) {
+                    this._redeSocial.descurtirPostagem(postagem.id);
+                }
+                else {
+                    console.log("Opção inválida. Tente novamente.");
+                }
+            } while (opcao !== 1 && opcao !== 2);
         }
+    }
+    exibirFeed() {
+        console.log("\nFeed de postagens:");
+        const postagens = this._redeSocial.exibirFeedPostagens();
+        this.exibirPostagens(postagens);
         console.log("\nFeed de postagens atualizado!");
     }
     consultarPerfil() {
@@ -200,15 +207,86 @@ class App {
         const postagemPesquisada = this._redeSocial.consultarPostagem(id, null, null, null);
         console.log(`\nPostagem encontrada: ${this._redeSocial.toStringPostagem(postagemPesquisada[0])}`);
     }
+    exibirPostagensPerfil() {
+        const nome = utils.input("Digite o nome do perfil: ");
+        const postagens = this._redeSocial.exibirPostagensPerfil(nome);
+        console.log(`\nPostagens do perfil ${nome}:`);
+        this.exibirPostagens(postagens);
+        console.log(`\nPostagens do perfil ${nome} atualizadas!`);
+    }
+    exibirPostagensHashtag() {
+        const hashtag = utils.input("Digite a hashtag: ");
+        if (!hashtag.includes("#")) {
+            throw new InputInvalidoError("Hashtag inválida: a hashtag deve começar com '#'.");
+        }
+        const postagens = this._redeSocial.exibirPostagensHashtag(hashtag);
+        console.log(`\nPostagens com a hashtag ${hashtag}:`);
+        this.exibirPostagens(postagens);
+        console.log(`\nPostagens com a hashtag ${hashtag} atualizadas!`);
+    }
+    exibirPostagensPopulares() {
+        const postagens = this._redeSocial.exibirPostagensPopulares();
+        console.log(`\nPostagens populares:`);
+        this.exibirPostagens(postagens);
+        console.log(`\nPostagens populares atualizadas!`);
+    }
+    exibirHashtagsPopulares() {
+        const hashtags = this._redeSocial.exibirHashtagsPopulares();
+        console.log(`\nHashtags populares:\n`);
+        for (let i = 0; i < hashtags.length; i++) {
+            console.log(`${i + 1}°` + chalk.blue(` ${hashtags[i]}`));
+        }
+    }
+    excluirPerfil() {
+        const id = utils.input("Digite o id do perfil: ");
+        this._redeSocial.excluirPerfil(id);
+        console.log(`\nPerfil "${id}" e suas postagens excluído com sucesso!`);
+    }
+    excluirPostagem() {
+        const id = utils.input("Digite o id da postagem: ");
+        this._redeSocial.excluirPostagem(id);
+        console.log(`\nPostagem "${id}" excluída com sucesso!`);
+    }
+    criarPerfilAleatorio() {
+        const perfil = this._redeSocial.criarPerfilAletorio();
+        this._redeSocial.incluirPerfil(perfil);
+        console.log(`\nPerfil aleatório criado com sucesso!`);
+    }
+    criarPostagemAleatoria() {
+        const nome = utils.input("Digite o nome de usuário do autor da postagem: ");
+        const autor = this._redeSocial.consultarPerfil(null, nome, null);
+        const postagem = this._redeSocial.criarPostagemAleatoria(autor);
+        this._redeSocial.incluirPostagem(postagem);
+        console.log(`\nPostagem aleatória criada com sucesso!`);
+    }
     menu() {
-        console.log("\nOpções disponíveis:");
-        const texto = '\n\t1 - Criar Perfil\n' +
-            '\n\t2 - Criar Postagem\n' +
-            '\n\t3 - Exibir feed\n' +
-            '\n\t4 - Consultar perfil\n' +
-            '\n\t5 - Consultar postagem\n' +
-            '\n\t0 - sair\n';
-        console.log(texto);
+        console.log(chalk.bold.green("\nOpções disponíveis:"));
+        const options = [
+            "1 - Criar Perfil",
+            "2 - Criar Postagem",
+            "3 - Exibir feed",
+            "4 - Consultar perfil",
+            "5 - Consultar postagem",
+            "6 - Exibir postagens perfil",
+            "7 - Exibir postagens hashtag",
+            "8 - Exibir postagens populares",
+            "9 - Exibir hashtags populares",
+            "10 - Excluir perfil",
+            "11 - Excluir postagem",
+            "12 - Criar perfil aleatório",
+            "13 - Criar postagem aleatória",
+            "0 - Sair",
+        ];
+        const sections = [
+            { title: "Perfis e Postagens", options: options.slice(0, 2) },
+            { title: "Exibição e Consulta", options: options.slice(2, 9) },
+            { title: "Ações Adicionais", options: options.slice(9, 13) },
+            { title: "Encerrar", options: options.slice(13) },
+        ];
+        sections.forEach((section) => {
+            console.log(chalk.yellow(`\n${section.title}:`));
+            section.options.forEach((option) => console.log(chalk.cyan(`\t${option}`)));
+        });
     }
     run() {
         console.log("CARREGANDO DADOS...");
@@ -249,6 +327,30 @@ class App {
                     case 5:
                         this.consultarPostagem();
                         break;
+                    case 6:
+                        this.exibirPostagensPerfil();
+                        break;
+                    case 7:
+                        this.exibirPostagensHashtag();
+                        break;
+                    case 8:
+                        this.exibirPostagensPopulares();
+                        break;
+                    case 9:
+                        this.exibirHashtagsPopulares();
+                        break;
+                    case 10:
+                        this.excluirPerfil();
+                        break;
+                    case 11:
+                        this.excluirPostagem();
+                        break;
+                    case 12:
+                        this.criarPerfilAleatorio();
+                        break;
+                    case 13:
+                        this.criarPostagemAleatoria();
+                        break;
                 }
             }
             catch (e) {
@@ -257,7 +359,7 @@ class App {
                     console.log(`${e.message}, Ops :/, este erro não foi reconhecido, por favor, entre em contato com o administrador.`);
                 }
             }
-        } while (opcao != 0);
+        } while (opcao !== 0);
         console.log("\nAPLICAÇÃO FINALIZADA!");
     }
 }

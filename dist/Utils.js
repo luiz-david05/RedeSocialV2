@@ -12,5 +12,3 @@ const gerarId = () => {
     return id.toString();
 };
 export { input, getNumber, gerarId };
-
-

@@ -2,6 +2,7 @@ import { Perfil } from "./entidades/Perfil.js";
 import { Postagem } from "./entidades/Postagem.js";
 import { PostagemAvancada } from "./entidades/PostagemAvancada.js";
 import { HashtagJaExisteError } from "./erros/HashtagJaExisteError.js";
+import { InputInvalidoError } from "./erros/InputInvalidoError.js";
 import { PerfilInexistenteError } from "./erros/PerfilInexistenteError.js";
 import { PerfilJaExisteError } from "./erros/PerfilJaExisteError.js";
 import { PostagemInexistenteErro } from "./erros/PostagemInexistenteError.js";
@@ -78,7 +79,7 @@ class RedeSocial {
             perfil
         );
 
-        if (postagens.length == 0) {
+        if (postagens.length === 0) {
             throw new PostagemInexistenteErro("Nenhuma postagem encontrada.");
         }
 
@@ -113,38 +114,49 @@ class RedeSocial {
         }
     }
 
-    exibirPostagensPerfil(idPerfil: string): Postagem[] {
-        const perfil = this._repositorioPerfis.consultarPerfil(
-            idPerfil,
-            null,
-            null
-        );
+    // mudei para pesquisar pelo nome do perfil
+    exibirPostagensPerfil(nomePerfil: string): Postagem[] {
+        const perfil = this.consultarPerfil(null, nomePerfil, null);
         const postagensPerfil: Postagem[] = [];
 
         perfil.postagens.forEach((postagem) => {
-            if (postagem instanceof PostagemAvancada) {
-                this.decrementarVisualizacoes(postagem);
+            if (
+                postagem instanceof PostagemAvancada &&
+                postagem.visualizacoesRestantes > 0
+            ) {
+                postagensPerfil.push(postagem);
             }
 
-            postagensPerfil.push(postagem);
+            if (postagem instanceof PostagemAvancada) {
+                this.decrementarVisualizacoes(postagem);
+            } else if (postagem instanceof Postagem) {
+                postagensPerfil.push(postagem);
+            }
         });
 
         return postagensPerfil;
     }
 
     exibirPostagensHashtag(hashtag: string): PostagemAvancada[] {
-        const postagens = this._repositorioPostagens.consultarPostagem(
-            null,
-            null,
-            hashtag,
-            null
-        );
-
+        const postagens = this._repositorioPostagens.getPostagens();
         const postagensHashtag: PostagemAvancada[] = [];
 
+        if (postagens.length === 0) {
+            throw new PostagemInexistenteErro("Nenhuma postagem encontrada.");
+        }
+
         postagens.forEach((postagem) => {
-            this.decrementarVisualizacoes(postagem as PostagemAvancada);
-            postagensHashtag.push(postagem as PostagemAvancada);
+            if (
+                postagem instanceof PostagemAvancada &&
+                postagem.visualizacoesRestantes > 0 &&
+                postagem.existeHashtag(hashtag)
+            ) {
+                postagensHashtag.push(postagem);
+            }
+
+            if (postagem instanceof PostagemAvancada) {
+                this.decrementarVisualizacoes(postagem);
+            }
         });
 
         return postagensHashtag;
@@ -153,6 +165,10 @@ class RedeSocial {
     exibirPostagensPopulares(): Postagem[] {
         const postagens = this._repositorioPostagens.getPostagens();
         const postagensPopulares: Postagem[] = [];
+
+        if (postagens.length === 0) {
+            throw new PostagemInexistenteErro("Nenhuma postagem encontrada.");
+        }
 
         postagens.forEach((postagem) => {
             if (
@@ -179,6 +195,10 @@ class RedeSocial {
 
     exibirHashtagsPopulares(): string[] {
         const postagens = this._repositorioPostagens.getPostagens();
+
+        if (postagens.length === 0) {
+            throw new PostagemInexistenteErro("Nenhuma postagem encontrada.");
+        }
 
         const todasHashtags: string[] = [];
 
@@ -208,6 +228,10 @@ class RedeSocial {
         const postagens = this._repositorioPostagens.getPostagens();
         const postagensFeed: Postagem[] = [];
 
+        if (postagens.length === 0) {
+            throw new PostagemInexistenteErro("Nenhuma postagem encontrada.");
+        }
+
         postagens.forEach((postagem) => {
             if (
                 postagem instanceof PostagemAvancada &&
@@ -229,18 +253,19 @@ class RedeSocial {
     }
 
     excluirPerfil(id: string): void {
-        const perfil = this._repositorioPerfis.consultarPerfil(id, null, null);
+        const perfil = this.consultarPerfil(id, null, null);
+
+        if (perfil.postagens.length > 0) {
+            perfil.postagens.forEach((postagem) => {
+                this._repositorioPostagens.excluirPostagem(postagem.id);
+            });
+        }
 
         this._repositorioPerfis.excluirPerfil(id);
     }
 
     excluirPostagem(id: string): void {
-        const postagem = this._repositorioPostagens.consultarPostagem(
-            id,
-            null,
-            null,
-            null
-        );
+        const postagem = this.consultarPostagem(id, null, null, null);
 
         this._repositorioPostagens.excluirPostagem(id);
     }
@@ -285,6 +310,35 @@ class RedeSocial {
         }.com`;
 
         return new Perfil(id, nome, email);
+    }
+
+    criarPostagemAleatoria(perfil: Perfil): Postagem {
+        const textos = [
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+            "Nulla facilisi. Donec euismod, velit eget aliquam dapibus, odio urna elementum sapien, eget ultricies velit quam sit amet justo.",
+            "Sed auctor, nisl eget aliquet ultricies, nunc elit aliquam velit, nec ultricies arcu nisl quis lectus.",
+            "Sed vitae nisl et leo aliquet ultricies.",
+            "vini vidi vici",
+            "Etiam id nulla sit amet velit ultricies lacinia.",
+            "Sed eget nulla et nisl aliquam aliquet.",
+        ]
+
+
+        const id = utils.gerarId();
+        const texto = textos[Math.floor(Math.random() * textos.length)];
+        const data = new Date();
+        const tipo = utils.getNumber("Digite 0 para postagem normal ou 1 para postagem avançada: ");
+
+        if (tipo === 0) {
+            return new Postagem(id, texto, 0, 0, this.formatarData(data), perfil);
+        } else if (tipo === 1) {
+            const hashtags = ["#feliz", "#triste", "#depre", "#fome", "#sono", "#cansado", "#alegre", "#chateado", "#raiva", "#amor"];
+            const hashtag = hashtags[Math.floor(Math.random() * hashtags.length)];
+
+            return new PostagemAvancada(id, texto, 0, 0, this.formatarData(data), perfil, [hashtag], 100);
+        } else {
+            throw new InputInvalidoError("Tipo de postagem inválido.");
+        }
     }
 
     // metodos tostring objetos

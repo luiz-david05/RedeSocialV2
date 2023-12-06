@@ -30,12 +30,12 @@ export class repositorioPostagensArray implements IRepositorioPostagens {
     ): Postagem[] {
         return this._postagens.filter(
             (postagem) =>
-                (postagem.id == null || postagem.id == id) &&
-                (postagem.texto == null || postagem.texto.indexOf(texto) != 1) &&
-                (hashtag == null ||
+                (postagem.id === null || postagem.id === id) &&
+                (postagem.texto === null || postagem.texto.indexOf(texto) != 1) &&
+                (hashtag === null ||
                     (postagem instanceof PostagemAvancada &&
                         postagem.existeHashtag(hashtag))) &&
-                (perfil == null || postagem.perfil == perfil)
+                (perfil === null || postagem.perfil === perfil)
         );
     }
 

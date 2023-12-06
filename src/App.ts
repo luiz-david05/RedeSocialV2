@@ -5,13 +5,18 @@ import { repositorioPerfisArray } from "./interfaces/IRepositorioPerfis.js";
 import { repositorioPostagensArray } from "./interfaces/IRepositorioPostagens.js";
 import { InputInvalidoError } from "./erros/InputInvalidoError.js";
 import * as utils from "./Utils.js";
-import { RedeSocial} from "./RedeSocial.js";
+import { RedeSocial } from "./RedeSocial.js";
 import { AplicacaoError } from "./erros/AplicacaoError.js";
 import { ArquivoError } from "./erros/ArquivoError.js";
 import fs from "fs";
+import chalk from "chalk";
+import * as readlineSync from 'readline-sync'; // Importando a biblioteca readline-sync
 
 class App {
-    private _redeSocial: RedeSocial = new RedeSocial(new repositorioPerfisArray(), new repositorioPostagensArray());
+    private _redeSocial: RedeSocial = new RedeSocial(
+        new repositorioPerfisArray(),
+        new repositorioPostagensArray()
+    );
 
     static main(): void {
         new App().run();
@@ -85,7 +90,6 @@ class App {
                 "Texto inválido: o comprimento deve estar entre 10 e 500 caracteres"
             );
         }
-    
     }
 
     salvarPerfis(): void {
@@ -125,7 +129,8 @@ class App {
 
     salvarPostagens(): void {
         try {
-            const postagens = this._redeSocial.repositorioPostagens.getPostagens();
+            const postagens =
+                this._redeSocial.repositorioPostagens.getPostagens();
             const postagensParaEscrever = postagens.map((postagem) => {
                 return this._redeSocial.toStringPostagemArquivo(postagem);
             });
@@ -180,7 +185,11 @@ class App {
                             Number(curtidas),
                             Number(descurtidas),
                             data,
-                            this._redeSocial.consultarPerfil(perfilId, null, null),
+                            this._redeSocial.consultarPerfil(
+                                perfilId,
+                                null,
+                                null
+                            ),
                             hashtagArray,
                             Number(vizualizacoesRestantes)
                         );
@@ -207,32 +216,59 @@ class App {
 
     criarPostagem(): void {
         const id = utils.gerarId();
-        const nomeAutor = utils.input("Digite o nome de usuário do autor da postagem: ");
-        const autor = this._redeSocial.consultarPerfil(null, nomeAutor, null)
+        const nomeAutor = utils.input(
+            "Digite o nome de usuário do autor da postagem: "
+        );
+        const autor = this._redeSocial.consultarPerfil(null, nomeAutor, null);
 
         const texto = utils.input("Digite o texto da postagem: ");
         this.validaDadosPostagem(texto);
 
-        let tipo = utils.getNumber("Digite o tipo da postagem (1 - Normal, 2 - Avançada): ");
+        let tipo = utils.getNumber(
+            "Digite o tipo da postagem (1 - Normal, 2 - Avançada): "
+        );
 
         let postagem: Postagem;
 
         if (tipo === 1) {
-            postagem = new Postagem(id, texto, 0, 0, this._redeSocial.formatarData(new Date()), autor);
+            postagem = new Postagem(
+                id,
+                texto,
+                0,
+                0,
+                this._redeSocial.formatarData(new Date()),
+                autor
+            );
         } else if (tipo === 2) {
-            postagem = new PostagemAvancada(id, texto, 0, 0, this._redeSocial.formatarData(new Date()), autor, [], 300);
+            postagem = new PostagemAvancada(
+                id,
+                texto,
+                0,
+                0,
+                this._redeSocial.formatarData(new Date()),
+                autor,
+                [],
+                300
+            );
 
             while (true) {
-                const nomeHashtag = utils.input("Digite o nome da hashtag (0 para sair): ");
-
-                if (nomeHashtag.includes("#")) {
-                    this._redeSocial.inserirHashtag(postagem as PostagemAvancada, nomeHashtag)
-                } else {
-                    console.log("\nHashtag inválida: a hashtag deve começar com '#'.");
-                }
+                const nomeHashtag = utils.input(
+                    "Digite o nome da hashtag (0 para sair): "
+                );
 
                 if (nomeHashtag === "0") {
                     break;
+                }
+
+                if (nomeHashtag.includes("#")) {
+                    this._redeSocial.inserirHashtag(
+                        postagem as PostagemAvancada,
+                        nomeHashtag
+                    );
+                } else {
+                    console.log(
+                        "\nHashtag inválida: a hashtag deve começar com '#'."
+                    );
                 }
             }
         }
@@ -241,35 +277,46 @@ class App {
         console.log(`\nPostagem criada com sucesso!`);
     }
 
-    exibirFeed(): void {
-        console.log("\nFeed de postagens:");
-
-        const postagens = this._redeSocial.exibirFeedPostagens()
-
+    exibirPostagens(postagens: Postagem[]): void {
         for (let i = 0; i < postagens.length; i++) {
             const postagem = postagens[i];
 
             console.log(`\nPostagem [${i + 1}]`);
             console.log(`${this._redeSocial.toStringPostagem(postagem)}`);
 
-            const opcao = utils.getNumber("\nDigite 1 para curtir, 2 para descurtir ou 0 para sair: ");
+            let opcao: number;
 
-            if (opcao === 1) {
-                this._redeSocial.curtirPostagem(postagem.id);
-            } else if (opcao === 2) {
-                this._redeSocial.descurtirPostagem(postagem.id);
-            } else if (opcao === 0) {
-                break;
-            }
+            do {
+                opcao = utils.getNumber(
+                    "\nDigite 1 para curtir, 2 para descurtir: "
+                );
+
+                if (opcao === 1) {
+                    this._redeSocial.curtirPostagem(postagem.id);
+                } else if (opcao === 2) {
+                    this._redeSocial.descurtirPostagem(postagem.id);
+                } else {
+                    console.log("Opção inválida. Tente novamente.");
+                }
+            } while (opcao !== 1 && opcao !== 2);
         }
+    }
+
+    exibirFeed(): void {
+        console.log("\nFeed de postagens:");
+
+        const postagens = this._redeSocial.exibirFeedPostagens();
+
+        this.exibirPostagens(postagens);
 
         console.log("\nFeed de postagens atualizado!");
     }
 
     consultarPerfil(): void {
-
-        const busca = utils.getNumber("Digite 1 para buscar por id, 2 para buscar por nome ou 3 para buscar por email: ");
-        let perfilPesquisado: Perfil
+        const busca = utils.getNumber(
+            "Digite 1 para buscar por id, 2 para buscar por nome ou 3 para buscar por email: "
+        );
+        let perfilPesquisado: Perfil;
 
         if (busca === 1) {
             const id = utils.input("Digite o id do perfil: ");
@@ -278,43 +325,169 @@ class App {
         } else if (busca === 2) {
             const nome = utils.input("Digite o nome do perfil: ");
 
-            perfilPesquisado = this._redeSocial.consultarPerfil(null, nome, null);
+            perfilPesquisado = this._redeSocial.consultarPerfil(
+                null,
+                nome,
+                null
+            );
         } else if (busca === 3) {
             const email = utils.input("Digite o email do perfil: ");
 
-            perfilPesquisado = this._redeSocial.consultarPerfil(null, null, email);
+            perfilPesquisado = this._redeSocial.consultarPerfil(
+                null,
+                null,
+                email
+            );
         } else {
-            throw new InputInvalidoError("Opção inválida: a opção deve ser 1, 2 ou 3.");
+            throw new InputInvalidoError(
+                "Opção inválida: a opção deve ser 1, 2 ou 3."
+            );
         }
 
-        console.log(`\nPerfil encontrado: ${this._redeSocial.toStringPerfil(perfilPesquisado)}`);
+        console.log(
+            `\nPerfil encontrado: ${this._redeSocial.toStringPerfil(
+                perfilPesquisado
+            )}`
+        );
     }
 
     consultarPostagem(): void {
         const id = utils.input("Digite o id da postagem: ");
-        const postagemPesquisada = this._redeSocial.consultarPostagem(id, null, null, null);
+        const postagemPesquisada = this._redeSocial.consultarPostagem(
+            id,
+            null,
+            null,
+            null
+        );
 
-        console.log(`\nPostagem encontrada: ${this._redeSocial.toStringPostagem(postagemPesquisada[0])}`);
+        console.log(
+            `\nPostagem encontrada: ${this._redeSocial.toStringPostagem(
+                postagemPesquisada[0]
+            )}`
+        );
+    }
+
+    exibirPostagensPerfil(): void {
+        const nome = utils.input("Digite o nome do perfil: ");
+        const postagens = this._redeSocial.exibirPostagensPerfil(nome);
+
+        console.log(`\nPostagens do perfil ${nome}:`);
+
+        this.exibirPostagens(postagens);
+
+        console.log(`\nPostagens do perfil ${nome} atualizadas!`);
+    }
+
+    exibirPostagensHashtag(): void {
+        const hashtag = utils.input("Digite a hashtag: ");
+
+        if (!hashtag.includes("#")) {
+            throw new InputInvalidoError(
+                "Hashtag inválida: a hashtag deve começar com '#'."
+            );
+        }
+
+        const postagens: PostagemAvancada[] =
+            this._redeSocial.exibirPostagensHashtag(hashtag);
+
+        console.log(`\nPostagens com a hashtag ${hashtag}:`);
+
+        this.exibirPostagens(postagens);
+
+        console.log(`\nPostagens com a hashtag ${hashtag} atualizadas!`);
+    }
+
+    exibirPostagensPopulares(): void {
+        const postagens = this._redeSocial.exibirPostagensPopulares();
+
+        console.log(`\nPostagens populares:`);
+
+        this.exibirPostagens(postagens);
+
+        console.log(`\nPostagens populares atualizadas!`);
+    }
+
+    exibirHashtagsPopulares(): void {
+        const hashtags = this._redeSocial.exibirHashtagsPopulares();
+
+        console.log(`\nHashtags populares:\n`);
+
+        for (let i = 0; i < hashtags.length; i++) {
+            console.log(`${i + 1}°` + chalk.blue(` ${hashtags[i]}`));
+        }
+    }
+
+    excluirPerfil(): void {
+        const id = utils.input("Digite o id do perfil: ");
+        this._redeSocial.excluirPerfil(id);
+
+        console.log(`\nPerfil "${id}" e suas postagens excluído com sucesso!`);
+    }
+
+    excluirPostagem(): void {
+        const id = utils.input("Digite o id da postagem: ");
+        this._redeSocial.excluirPostagem(id);
+
+        console.log(`\nPostagem "${id}" excluída com sucesso!`);
+    }
+
+    criarPerfilAleatorio(): void {
+        const perfil = this._redeSocial.criarPerfilAletorio();
+
+        this._redeSocial.incluirPerfil(perfil);
+        console.log(`\nPerfil aleatório criado com sucesso!`);
+    }
+
+    criarPostagemAleatoria(): void {
+        const nome = utils.input(
+            "Digite o nome de usuário do autor da postagem: "
+        );
+        const autor = this._redeSocial.consultarPerfil(null, nome, null);
+        const postagem = this._redeSocial.criarPostagemAleatoria(autor);
+
+        this._redeSocial.incluirPostagem(postagem);
+        console.log(`\nPostagem aleatória criada com sucesso!`);
     }
 
     menu(): void {
-        console.log("\nOpções disponíveis:");
+        console.log(chalk.bold.green("\nOpções disponíveis:"));
 
-        const texto =
-            '\n\t1 - Criar Perfil\n' +
-            '\n\t2 - Criar Postagem\n' +
-            '\n\t3 - Exibir feed\n' +
-            '\n\t4 - Consultar perfil\n' +
-            '\n\t5 - Consultar postagem\n' +
-            '\n\t0 - sair\n'
+        const options = [
+            "1 - Criar Perfil",
+            "2 - Criar Postagem",
+            "3 - Exibir feed",
+            "4 - Consultar perfil",
+            "5 - Consultar postagem",
+            "6 - Exibir postagens perfil",
+            "7 - Exibir postagens hashtag",
+            "8 - Exibir postagens populares",
+            "9 - Exibir hashtags populares",
+            "10 - Excluir perfil",
+            "11 - Excluir postagem",
+            "12 - Criar perfil aleatório",
+            "13 - Criar postagem aleatória",
+            "0 - Sair",
+        ];
 
-        console.log(texto);
+        const sections = [
+            { title: "Perfis e Postagens", options: options.slice(0, 2) },
+            { title: "Exibição e Consulta", options: options.slice(2, 9) },
+            { title: "Ações Adicionais", options: options.slice(9, 13) },
+            { title: "Encerrar", options: options.slice(13) },
+        ];
+
+        sections.forEach((section) => {
+            console.log(chalk.yellow(`\n${section.title}:`));
+            section.options.forEach((option) =>
+                console.log(chalk.cyan(`\t${option}`))
+            );
+        });
     }
 
     run(): void {
         console.log("CARREGANDO DADOS...");
 
-        let opcao: number
+        let opcao: number;
 
         try {
             this.carregarPerfis();
@@ -322,10 +495,12 @@ class App {
 
             console.log("\nDADOS CARREGADOS COM SUCESSO!");
         } catch (e: any) {
-            console.log(`\nNão foi possível carregar os dados: ${e.message}`)
+            console.log(`\nNão foi possível carregar os dados: ${e.message}`);
 
             if (!(e instanceof AplicacaoError)) {
-                console.log(`\n${e.message}, Ops :/, este erro não foi reconhecido, por favor, entre em contato com o administrador.`)
+                console.log(
+                    `\n${e.message}, Ops :/, este erro não foi reconhecido, por favor, entre em contato com o administrador.`
+                );
             }
         }
 
@@ -334,10 +509,10 @@ class App {
             this.menu();
 
             opcao = utils.getNumber("\nDigite a opção desejada: ");
+            
             try {
-
                 switch (opcao) {
-                    case 0: 
+                    case 0:
                         this.salvarPerfis();
                         this.salvarPostagens();
                         break;
@@ -356,16 +531,43 @@ class App {
                     case 5:
                         this.consultarPostagem();
                         break;
+                    case 6:
+                        this.exibirPostagensPerfil();
+                        break;
+                    case 7:
+                        this.exibirPostagensHashtag();
+                        break;
+                    case 8:
+                        this.exibirPostagensPopulares();
+                        break;
+                    case 9:
+                        this.exibirHashtagsPopulares();
+                        break;
+                    case 10:
+                        this.excluirPerfil();
+                        break;
+                    case 11:
+                        this.excluirPostagem();
+                        break;
+                    case 12:
+                        this.criarPerfilAleatorio();
+                        break;
+                    case 13:
+                        this.criarPostagemAleatoria();
+                        break;
                 }
             } catch (e: any) {
-                console.log(`\nNão foi possível concluir a operação: ${e.message}`)
+                console.log(
+                    `\nNão foi possível concluir a operação: ${e.message}`
+                );
 
                 if (!(e instanceof AplicacaoError)) {
-                    console.log(`${e.message}, Ops :/, este erro não foi reconhecido, por favor, entre em contato com o administrador.`)
+                    console.log(
+                        `${e.message}, Ops :/, este erro não foi reconhecido, por favor, entre em contato com o administrador.`
+                    );
                 }
             }
-
-        } while (opcao != 0);
+        } while (opcao !== 0);
 
         console.log("\nAPLICAÇÃO FINALIZADA!");
     }

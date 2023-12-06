@@ -18,4 +18,4 @@ const gerarId = () => {
     return id.toString();
 }
 
-export { input, getNumber, gerarId }
+export { input, getNumber, gerarId}

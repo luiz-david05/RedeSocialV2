@@ -9,12 +9,12 @@ export class repositorioPostagensArray {
         postagem.perfil.postagens.push(postagem);
     }
     consultarPostagem(id, texto, hashtag, perfil) {
-        return this._postagens.filter((postagem) => (postagem.id == null || postagem.id == id) &&
-            (postagem.texto == null || postagem.texto.indexOf(texto) != 1) &&
-            (hashtag == null ||
+        return this._postagens.filter((postagem) => (postagem.id === null || postagem.id === id) &&
+            (postagem.texto === null || postagem.texto.indexOf(texto) != 1) &&
+            (hashtag === null ||
                 (postagem instanceof PostagemAvancada &&
                     postagem.existeHashtag(hashtag))) &&
-            (perfil == null || postagem.perfil == perfil));
+            (perfil === null || postagem.perfil === perfil));
     }
     excluirPostagem(id) {
         for (let i = 0; i < this._postagens.length; i++) {
