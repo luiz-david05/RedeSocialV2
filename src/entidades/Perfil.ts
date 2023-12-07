@@ -24,4 +24,12 @@ export class Perfil {
     get email() {
         return this._email;
     }
+
+    set nome(nome: string) {
+        this._nome = nome;
+    }
+
+    set email(email: string) {
+        this._email = email;
+    }
 }

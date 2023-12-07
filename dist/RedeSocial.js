@@ -135,6 +135,17 @@ class RedeSocial {
         });
         return postagensPopulares.slice(0, 10);
     }
+    // extra
+    exibirPerfisPopulares() {
+        const postagensPopulares = this.exibirPostagensPopulares();
+        const perfisPopulares = [];
+        postagensPopulares.forEach((postagem) => {
+            if (!perfisPopulares.includes(postagem.perfil)) {
+                perfisPopulares.push(postagem.perfil);
+            }
+        });
+        return perfisPopulares.slice(0, 10);
+    }
     exibirHashtagsPopulares() {
         const postagens = this._repositorioPostagens.getPostagens();
         if (postagens.length === 0) {
@@ -190,6 +201,10 @@ class RedeSocial {
     excluirPostagem(id) {
         const postagem = this.consultarPostagem(id, null, null, null);
         this._repositorioPostagens.excluirPostagem(id);
+    }
+    editarPerfil(perfil) {
+        this.consultarPerfil(perfil.id, null, null);
+        this._repositorioPerfis.editarPerfil(perfil.id, perfil.nome, perfil.email);
     }
     inserirHashtag(postagem, hashtag) {
         if (postagem.existeHashtag(hashtag)) {

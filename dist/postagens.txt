@@ -1,5 +1,5 @@
-p;31636;kkkkkkkkkkkkkkkk;4;0;06/12/2023;94035
-pa;86454;hahahahahahahahaha;7;0;06/12/2023;94035;#coringou;290
-pa;91177;askdjhsajkhdjksa;5;0;06/12/2023;94035;#kikolindo,#chavinho;292
-pa;58577;aksdhjsahdjas;5;0;06/12/2023;94035;#teste;296
-pa;54491;vini vidi vici;12;64;06/12/2023;94035;#cansado;99
+p;31636;kkkkkkkkkkkkkkkk;5;0;06/12/2023;94035
+pa;86454;hahahahahahahahaha;11;0;06/12/2023;94035;#coringou;278
+pa;91177;askdjhsajkhdjksa;5;0;06/12/2023;94035;#kikolindo,#chavinho;280
+pa;58577;aksdhjsahdjas;7;0;06/12/2023;94035;#teste;284
+pa;54491;vini vidi vici;12;64;06/12/2023;94035;#cansado;87

@@ -193,6 +193,21 @@ class RedeSocial {
         return postagensPopulares.slice(0, 10);
     }
 
+    // extra
+    exibirPerfisPopulares(): Perfil[] {
+        const postagensPopulares: Postagem[] = this.exibirPostagensPopulares()
+
+        const perfisPopulares: Perfil[] = []
+
+        postagensPopulares.forEach((postagem) => {
+            if (!perfisPopulares.includes(postagem.perfil)) {
+                perfisPopulares.push(postagem.perfil)
+            }
+        })
+
+        return perfisPopulares.slice(0, 10)
+    }
+
     exibirHashtagsPopulares(): string[] {
         const postagens = this._repositorioPostagens.getPostagens();
 
@@ -270,6 +285,11 @@ class RedeSocial {
         this._repositorioPostagens.excluirPostagem(id);
     }
 
+    editarPerfil(perfil: Perfil): void {
+        this.consultarPerfil(perfil.id, null, null);
+        this._repositorioPerfis.editarPerfil(perfil.id, perfil.nome, perfil.email);
+    }
+
     inserirHashtag(postagem: PostagemAvancada, hashtag: string): void {
         if (postagem.existeHashtag(hashtag)) {
             throw new HashtagJaExisteError("Hashtag já existe.");
@@ -322,7 +342,6 @@ class RedeSocial {
             "Etiam id nulla sit amet velit ultricies lacinia.",
             "Sed eget nulla et nisl aliquam aliquet.",
         ]
-
 
         const id = utils.gerarId();
         const texto = textos[Math.floor(Math.random() * textos.length)];

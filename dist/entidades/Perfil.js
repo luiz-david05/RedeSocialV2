@@ -20,4 +20,10 @@ export class Perfil {
     get email() {
         return this._email;
     }
+    set nome(nome) {
+        this._nome = nome;
+    }
+    set email(email) {
+        this._email = email;
+    }
 }

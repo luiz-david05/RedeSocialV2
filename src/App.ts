@@ -10,7 +10,6 @@ import { AplicacaoError } from "./erros/AplicacaoError.js";
 import { ArquivoError } from "./erros/ArquivoError.js";
 import fs from "fs";
 import chalk from "chalk";
-import * as readlineSync from 'readline-sync'; // Importando a biblioteca readline-sync
 
 class App {
     private _redeSocial: RedeSocial = new RedeSocial(
@@ -22,7 +21,7 @@ class App {
         new App().run();
     }
 
-    private validaDadosPerfil(nome: string, email: string): void {
+    private validaDadosPerfil(nome?: string, email?: string): void {
         if (nome.length < 5 || nome.length > 100) {
             throw new InputInvalidoError(
                 "Nome inválido: o comprimento deve estar entre 5 e 100 caracteres"
@@ -288,17 +287,19 @@ class App {
 
             do {
                 opcao = utils.getNumber(
-                    "\nDigite 1 para curtir, 2 para descurtir: "
+                    "\nDigite 1 para curtir, 2 para descurtir ou 0 para ignorar: "
                 );
 
                 if (opcao === 1) {
                     this._redeSocial.curtirPostagem(postagem.id);
                 } else if (opcao === 2) {
                     this._redeSocial.descurtirPostagem(postagem.id);
+                } else if (opcao === 0) {
+                    continue;
                 } else {
                     console.log("Opção inválida. Tente novamente.");
                 }
-            } while (opcao !== 1 && opcao !== 2);
+            } while (opcao !== 1 && opcao !== 2 && opcao !== 0);
         }
     }
 
@@ -449,31 +450,97 @@ class App {
         console.log(`\nPostagem aleatória criada com sucesso!`);
     }
 
+    exibirPerfisPopulares(): void {
+        const perfis = this._redeSocial.exibirPerfisPopulares()
+
+        console.log(`\nPerfis populares:\n`)
+
+        let count = 1
+        perfis.forEach((perfil) => {
+            console.log(`${count}°` + chalk.blue(` ${perfil.nome}`))
+            console.log(this._redeSocial.toStringPerfil(perfil))
+            count++
+        })
+    }
+
+    editarPerfil(): void {
+        const busca = utils.getNumber(
+            "Digite 1 para buscar por id, 2 para buscar por nome ou 3 para buscar por email: "
+        );
+        let perfilPesquisado: Perfil;
+
+        if (busca === 1) {
+            const id = utils.input("Digite o id do perfil: ");
+
+            perfilPesquisado = this._redeSocial.consultarPerfil(id, null, null);
+        } else if (busca === 2) {
+            const nome = utils.input("Digite o nome do perfil: ");
+
+            perfilPesquisado = this._redeSocial.consultarPerfil(
+                null,
+                nome,
+                null
+            );
+        } else if (busca === 3) {
+            const email = utils.input("Digite o email do perfil: ");
+
+            perfilPesquisado = this._redeSocial.consultarPerfil(
+                null,
+                null,
+                email
+            );
+        } else {
+            throw new InputInvalidoError(
+                "Opção inválida: a opção deve ser 1, 2 ou 3."
+            );
+        }
+
+        const oqueEditar = utils.input("Digite o que deseja editar: (nome ou email):  ")
+
+        if (oqueEditar == 'nome') {
+            const novoNome = utils.input("Digite o novo nome: ")
+
+            perfilPesquisado.nome = novoNome
+        } else if (oqueEditar == 'email') {
+            const novoEmail = utils.input("Digite o novo email: ")
+
+            perfilPesquisado.email = novoEmail
+        } else {
+            throw new InputInvalidoError(
+                "Opção inválida: a opção deve ser nome ou email."
+            );
+        }
+
+        console.log(`\nPerfil editado com sucesso!`);
+    }
+
     menu(): void {
         console.log(chalk.bold.green("\nOpções disponíveis:"));
 
         const options = [
             "1 - Criar Perfil",
             "2 - Criar Postagem",
-            "3 - Exibir feed",
-            "4 - Consultar perfil",
-            "5 - Consultar postagem",
-            "6 - Exibir postagens perfil",
-            "7 - Exibir postagens hashtag",
-            "8 - Exibir postagens populares",
-            "9 - Exibir hashtags populares",
-            "10 - Excluir perfil",
-            "11 - Excluir postagem",
+            "3 - Excluir perfil",
+            "4 - Excluir postagem",
+            "5 - Exibir feed",
+            "6 - Consultar perfil",
+            "7 - Consultar postagem",
+            "8 - Exibir postagens perfil",
+            "9 - Exibir postagens hashtag",
+            "10 - Exibir postagens populares",
+            "11 - Exibir hashtags populares",
             "12 - Criar perfil aleatório",
             "13 - Criar postagem aleatória",
+            "14 - Exibir perfis populares",
+            "15 - Editar perfil",
             "0 - Sair",
         ];
 
         const sections = [
-            { title: "Perfis e Postagens", options: options.slice(0, 2) },
-            { title: "Exibição e Consulta", options: options.slice(2, 9) },
-            { title: "Ações Adicionais", options: options.slice(9, 13) },
-            { title: "Encerrar", options: options.slice(13) },
+            { title: "Perfis e Postagens", options: options.slice(0, 4) },
+            { title: "Exibição e Consulta", options: options.slice(4, 11) },
+            { title: "Ações Adicionais", options: options.slice(11, 15) },
+            { title: "Encerrar", options: options.slice(15) },
         ];
 
         sections.forEach((section) => {
@@ -509,7 +576,7 @@ class App {
             this.menu();
 
             opcao = utils.getNumber("\nDigite a opção desejada: ");
-            
+
             try {
                 switch (opcao) {
                     case 0:
@@ -523,38 +590,45 @@ class App {
                         this.criarPostagem();
                         break;
                     case 3:
-                        this.exibirFeed();
-                        break;
-                    case 4:
-                        this.consultarPerfil();
-                        break;
-                    case 5:
-                        this.consultarPostagem();
-                        break;
-                    case 6:
-                        this.exibirPostagensPerfil();
-                        break;
-                    case 7:
-                        this.exibirPostagensHashtag();
-                        break;
-                    case 8:
-                        this.exibirPostagensPopulares();
-                        break;
-                    case 9:
-                        this.exibirHashtagsPopulares();
-                        break;
-                    case 10:
                         this.excluirPerfil();
                         break;
-                    case 11:
+                    case 4:
                         this.excluirPostagem();
+                        break;
+                    case 5:
+                        this.exibirFeed();
+                        break;
+                    case 6:
+                        this.consultarPerfil();
+                        break;
+                    case 7:
+                        this.consultarPostagem();
+                        break;
+                    case 8:
+                        this.exibirPostagensPerfil();
+                        break;
+                    case 9:
+                        this.exibirPostagensHashtag();
+                        break;
+                    case 10:
+                        this.exibirPostagensPopulares();
+                        break;
+                    case 11:
+                        this.exibirHashtagsPopulares();
                         break;
                     case 12:
                         this.criarPerfilAleatorio();
                         break;
                     case 13:
                         this.criarPostagemAleatoria();
+                        break
+                    case 14:
+                        this.exibirPerfisPopulares();
                         break;
+                    case 15:
+                        this.editarPerfil();
+                        break;
+
                 }
             } catch (e: any) {
                 console.log(

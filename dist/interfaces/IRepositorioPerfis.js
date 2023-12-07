@@ -25,4 +25,13 @@ export class repositorioPerfisArray {
             }
         }
     }
+    editarPerfil(id, nome, email) {
+        for (const perfil of this._perfis) {
+            if (perfil.id == id) {
+                perfil.nome = nome;
+                perfil.email = email;
+                break;
+            }
+        }
+    }
 }
