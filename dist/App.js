@@ -209,6 +209,22 @@ class App {
         const id = utils.input("Digite o id da postagem: ");
         const postagemPesquisada = this._redeSocial.consultarPostagem(id, null, null, null);
         console.log(`\nPostagem encontrada: ${this._redeSocial.toStringPostagem(postagemPesquisada[0])}`);
+        let opcao;
+        do {
+            opcao = utils.getNumber("\nDigite 1 para curtir, 2 para descurtir ou 0 para ignorar: ");
+            if (opcao === 1) {
+                this._redeSocial.curtirPostagem(postagemPesquisada[0].id);
+            }
+            else if (opcao === 2) {
+                this._redeSocial.descurtirPostagem(postagemPesquisada[0].id);
+            }
+            else if (opcao === 0) {
+                continue;
+            }
+            else {
+                console.log("Opção inválida. Tente novamente.");
+            }
+        } while (opcao !== 1 && opcao !== 2 && opcao !== 0);
     }
     exibirPostagensPerfil() {
         const nome = utils.input("Digite o nome do perfil: ");

@@ -352,6 +352,7 @@ class App {
         );
     }
 
+    // erro, ao consultar uma pa, não diminui as vizualizacoes restantes
     consultarPostagem(): void {
         const id = utils.input("Digite o id da postagem: ");
         const postagemPesquisada = this._redeSocial.consultarPostagem(
@@ -366,6 +367,24 @@ class App {
                 postagemPesquisada[0]
             )}`
         );
+        
+        let opcao: number;
+        do {
+            opcao = utils.getNumber(
+                "\nDigite 1 para curtir, 2 para descurtir ou 0 para ignorar: "
+            );
+
+            if (opcao === 1) {
+                this._redeSocial.curtirPostagem(postagemPesquisada[0].id);
+            } else if (opcao === 2) {
+                this._redeSocial.descurtirPostagem(postagemPesquisada[0].id);
+            } else if (opcao === 0) {
+                continue;
+            } else {
+                console.log("Opção inválida. Tente novamente.");
+            }
+        } while (opcao !== 1 && opcao !== 2 && opcao !== 0);
+
     }
 
     exibirPostagensPerfil(): void {
