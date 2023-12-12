@@ -1,1 +1,7 @@
 # Atividade avaliativa Rede Social Versao 2.0
+# Aluno: Luiz David Silva Gomes
+
+# Bibliotecas usadas e necessárias:
+    npm install readline-sync
+    npm install fs
+    npm install chalk

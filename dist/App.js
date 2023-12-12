@@ -10,6 +10,7 @@ import { AplicacaoError } from "./erros/AplicacaoError.js";
 import { ArquivoError } from "./erros/ArquivoError.js";
 import fs from "fs";
 import chalk from "chalk";
+import { VisualizacoesEsgotadasError } from "./erros/VisualizacoesEsgotadasError.js";
 class App {
     _redeSocial = new RedeSocial(new repositorioPerfisArray(), new repositorioPostagensArray());
     static main() {
@@ -205,9 +206,16 @@ class App {
         }
         console.log(`\nPerfil encontrado: ${this._redeSocial.toStringPerfil(perfilPesquisado)}`);
     }
+    // erro, ao consultar uma pa, não diminui as vizualizacoes restantes
     consultarPostagem() {
         const id = utils.input("Digite o id da postagem: ");
         const postagemPesquisada = this._redeSocial.consultarPostagem(id, null, null, null);
+        if (postagemPesquisada[0] instanceof PostagemAvancada) {
+            if (postagemPesquisada[0].visualizacoesRestantes == 0) {
+                throw new VisualizacoesEsgotadasError("As visualizações desta postagem estão esgotadas.");
+            }
+            this._redeSocial.decrementarVisualizacoes(postagemPesquisada[0]);
+        }
         console.log(`\nPostagem encontrada: ${this._redeSocial.toStringPostagem(postagemPesquisada[0])}`);
         let opcao;
         do {
@@ -283,7 +291,7 @@ class App {
         console.log(`\nPerfis populares:\n`);
         let count = 1;
         perfis.forEach((perfil) => {
-            console.log(`${count}°` + chalk.blue(` ${perfil.nome}`));
+            console.log(`\n${count}°` + chalk.gray(` @${perfil.nome}`));
             console.log(this._redeSocial.toStringPerfil(perfil));
             count++;
         });
@@ -368,56 +376,59 @@ class App {
         do {
             utils.input("\nPressione ENTER para continuar...");
             this.menu();
-            opcao = utils.getNumber("\nDigite a opção desejada: ");
+            opcao = utils.input("\nDigite a opção desejada: ");
+            // caso o app seja interrompido
+            this.salvarPerfis();
+            this.salvarPostagens();
             try {
                 switch (opcao) {
-                    case 0:
+                    case '0':
                         this.salvarPerfis();
                         this.salvarPostagens();
                         break;
-                    case 1:
+                    case '1':
                         this.criarPerfil();
                         break;
-                    case 2:
+                    case '2':
                         this.criarPostagem();
                         break;
-                    case 3:
+                    case '3':
                         this.excluirPerfil();
                         break;
-                    case 4:
+                    case '4':
                         this.excluirPostagem();
                         break;
-                    case 5:
+                    case '5':
                         this.exibirFeed();
                         break;
-                    case 6:
+                    case '6':
                         this.consultarPerfil();
                         break;
-                    case 7:
+                    case '7':
                         this.consultarPostagem();
                         break;
-                    case 8:
+                    case '8':
                         this.exibirPostagensPerfil();
                         break;
-                    case 9:
+                    case '9':
                         this.exibirPostagensHashtag();
                         break;
-                    case 10:
+                    case '10':
                         this.exibirPostagensPopulares();
                         break;
-                    case 11:
+                    case '11':
                         this.exibirHashtagsPopulares();
                         break;
-                    case 12:
+                    case '12':
                         this.criarPerfilAleatorio();
                         break;
-                    case 13:
+                    case '13':
                         this.criarPostagemAleatoria();
                         break;
-                    case 14:
+                    case '14':
                         this.exibirPerfisPopulares();
                         break;
-                    case 15:
+                    case '15':
                         this.editarPerfil();
                         break;
                 }
@@ -428,7 +439,7 @@ class App {
                     console.log(`${e.message}, Ops :/, este erro não foi reconhecido, por favor, entre em contato com o administrador.`);
                 }
             }
-        } while (opcao !== 0);
+        } while (opcao != '0');
         console.log("\nAPLICAÇÃO FINALIZADA!");
     }
 }

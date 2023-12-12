@@ -287,6 +287,7 @@ class RedeSocial {
 
     editarPerfil(perfil: Perfil): void {
         this.consultarPerfil(perfil.id, null, null);
+        
         this._repositorioPerfis.editarPerfil(perfil.id, perfil.nome, perfil.email);
     }
 

@@ -1,6 +1,5 @@
 p;31636;kkkkkkkkkkkkkkkk;6;0;06/12/2023;94035
-pa;86454;hahahahahahahahaha;11;0;06/12/2023;94035;#coringou;277
-pa;91177;askdjhsajkhdjksa;5;0;06/12/2023;94035;#kikolindo,#chavinho;279
-pa;58577;aksdhjsahdjas;7;0;06/12/2023;94035;#teste;283
-pa;54491;vini vidi vici;12;64;06/12/2023;94035;#cansado;86
-pa;15249;a gatinha caga muito, e eh podi demaise;2;0;09/12/2023;63572;#mulhercagona,#peidapodre;298
+pa;86454;hahahahahahahahaha;11;0;06/12/2023;94035;#coringou;274
+pa;91177;askdjhsajkhdjksa;5;0;06/12/2023;94035;#kikolindo,#chavinho;276
+pa;58577;aksdhjsahdjas;7;0;06/12/2023;94035;#teste;280
+pa;54491;vini vidi vici;12;64;06/12/2023;94035;#cansado;83

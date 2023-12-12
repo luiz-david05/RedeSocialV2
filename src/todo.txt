@@ -1,6 +1,6 @@
 # remodelar a redesocial para salvar as postagens e perfis ao serem criadas, evitando assim que
-ao quebrar o app, as mesmas não sejam salvas.
+ao quebrar o app, as mesmas não sejam salvas. ok
 
-# erro no consultar postagens, ao consultar uma pa, devem-se diminuir as visualizações restantes da mesma.
+# erro no consultar postagens, ao consultar uma pa, devem-se diminuir as visualizações restantes da mesma. ok
 
-# melhorar a exibição dos perfis populares
+# melhorar a exibição dos perfis populares. ok
